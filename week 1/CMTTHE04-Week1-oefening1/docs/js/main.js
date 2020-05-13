@@ -1,21 +1,21 @@
 
-window.addEventListener('load', () => {
+//get game element
+let game = document.getElementsByTagName("game")[0]
 
-    //get game element
-    let game = document.getElementsByTagName("game")[0]
+
+window.addEventListener('load', () => {
 
 
 
     // console.log(`x = ${randomX}, y = ${randomY}`);
     console.log(`${window.innerWidth} x ${window.innerHeight}`);
 
-
         let fishes = 100;
         for(let i = 0; i < fishes; i++){
 
         //random
-        let randomX = Math.random() * window.innerWidth + 100;
-        let randomY = Math.random() * window.innerHeight + 100;
+        let randomX = Math.random() * window.innerWidth;
+        let randomY = Math.random() * window.innerHeight;
         let randomBubbleX = Math.random() * window.innerWidth;
         let randomBubbleY = Math.random() * window.innerHeight;
         let randomHue = Math.random() * 360;
@@ -24,16 +24,12 @@ window.addEventListener('load', () => {
         let bubble = document.createElement("bubble");
         game.appendChild(bubble);
         bubble.style.transform = `translate(${randomBubbleX}px, ${randomBubbleY}px)`;
-        bubble.dataset.id = i;
-        bubble.dataset.type = "bubble";
 
         // vis element
         let fish = document.createElement("fish");
         game.appendChild(fish);
         fish.style.transform = `translate(${randomX}px, ${randomY}px)`;
         fish.style.filter = `hue-rotate(${randomHue}deg)`;
-        fish.dataset.id = i;
-        fish.dataset.type = "fish";
         
         
         fish.addEventListener("click", kill)
