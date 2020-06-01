@@ -1,13 +1,15 @@
 "use strict";
 var Ball = (function () {
-    function Ball() {
-        this._xspeed = 1;
-        this._yspeed = 1;
+    function Ball(gameInstance) {
+        this._xspeed = 2;
+        this._yspeed = 2;
+        this.maxSpeed = 20;
+        this.gameInstance = gameInstance;
         this.div = document.createElement("ball");
         var game = document.getElementsByTagName("game")[0];
         game.appendChild(this.div);
-        this.x = Math.random() * window.innerWidth;
-        this.y = Math.random() * window.innerHeight;
+        this.x = Math.random() * (window.innerWidth - this.div.clientWidth);
+        this.y = Math.random() * (window.innerHeight - this.div.clientHeight);
     }
     Object.defineProperty(Ball.prototype, "xspeed", {
         get: function () { return this._xspeed; },
@@ -21,21 +23,79 @@ var Ball = (function () {
         enumerable: true,
         configurable: true
     });
+    Ball.prototype.getRectangle = function () {
+        return this.div.getBoundingClientRect();
+    };
     Ball.prototype.update = function () {
+        var _a;
         this.x += this.xspeed;
         this.y += this.yspeed;
+        var rightWall = window.innerWidth - this.div.clientWidth;
+        var bottomWall = window.innerHeight - this.div.clientHeight;
+        if (this.x > rightWall) {
+            this.xspeed *= -1;
+            this.gameInstance.score++;
+            document.getElementsByTagName("score")[0].innerHTML = "Score: " + this.gameInstance.score;
+        }
+        if (this.y > bottomWall || this.y < 0) {
+            this.yspeed *= -1;
+        }
+        if (this.xspeed > this.maxSpeed) {
+            this.xspeed = this.maxSpeed;
+        }
+        if (this.x < 0) {
+            console.log("removing ball from array");
+            var index = this.gameInstance.balls.indexOf(this);
+            this.gameInstance.balls.splice(index, 1);
+            this.gameInstance.score--;
+            document.getElementsByTagName("score")[0].innerHTML = "Score: " + this.gameInstance.score;
+            (_a = this.div.parentNode) === null || _a === void 0 ? void 0 : _a.removeChild(this.div);
+        }
         this.div.style.transform = "translate(" + this.x + "px, " + this.y + "px)";
     };
     return Ball;
 }());
 var Game = (function () {
     function Game() {
-        this.ball = new Ball();
+        this.balls = [];
+        this.ballAmountStart = 10;
+        this._score = 0;
+        for (var i = 0; i < this.ballAmountStart; i++) {
+            this.balls.push(new Ball(this));
+        }
+        this.paddle = new Paddle();
         this.gameLoop();
     }
+    Object.defineProperty(Game.prototype, "score", {
+        get: function () { return this._score; },
+        set: function (score) { this._score = score; },
+        enumerable: true,
+        configurable: true
+    });
+    Game.prototype.checkCollision = function (a, b) {
+        return (a.left <= b.right &&
+            b.left <= a.right &&
+            a.top <= b.bottom &&
+            b.top <= a.bottom);
+    };
     Game.prototype.gameLoop = function () {
         var _this = this;
-        this.ball.update();
+        if (this.ballAmountStart > this.balls.length) {
+            for (var i = 0; i < this.ballAmountStart - this.balls.length; i++) {
+                this.balls.push(new Ball(this));
+            }
+        }
+        this.paddle.update();
+        for (var _i = 0, _a = this.balls; _i < _a.length; _i++) {
+            var b = _a[_i];
+            b.update();
+        }
+        for (var i = 0; i < this.balls.length; i++) {
+            var hit = this.checkCollision(this.balls[i].getRectangle(), this.paddle.getRectangle());
+            if (hit) {
+                this.balls[i].xspeed *= -2;
+            }
+        }
         requestAnimationFrame(function () { return _this.gameLoop(); });
     };
     return Game;
